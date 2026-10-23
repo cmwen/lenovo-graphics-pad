@@ -1,13 +1,23 @@
-# Implementation milestones
+# Implementation and acceptance
 
-- [x] Create public app repository from the Android template and register it in the workspace.
-- [x] Local input preview, pen payload encoder and automated foundation tests.
-- [x] Preserve Codex Micro Lenovo USB findings and transport reuse map.
-- [ ] Capture actual tablet input capabilities. Exit: model/ROM/pen and source/pressure/hover evidence in hardware record.
-- [ ] Define and inspect a complete external-pen HID descriptor. Exit: descriptor parser and independent host dumps match report tests, ranges and measured dimensions.
-- [ ] Bluetooth native adapter. Exit: Win11 and Mac pairing plus actual pen events; foreground loss sends release and unregisters cleanly.
-- [ ] Extract/port the proven FunctionFS backend with attribution and shared ownership. Exit: same descriptor/report contract as Bluetooth, ADB survives and recovery tests pass.
-- [ ] Host application matrix. Exit: absolute mapping, pressure status, buttons, latency, reconnection and named drawing app results for both operating systems and both transports.
-- [ ] Publish a tested APK and user setup/recovery instructions. Keep release signing private.
+## Implemented
 
-Do not restart configfs HID or USB audio investigation on the known Lenovo stock kernel. Read CODEX_MICRO_REUSE.md first. Do not promise pressure from a touchscreen that lacks a pressure-capable pen digitizer.
+- Public Android repository, template CI/release/signing and agent workflows.
+- Native Android input surface and direct HID report pipeline, single-pointer capture, history processing, contact cancellation, hover, barrel/eraser and bounded local ink.
+- Standard external-pen descriptor with reportID1, X/Y, pressure and pen flags; physical geometry derived from Android-reported active pad dimensions.
+- Rooted userspace FunctionFS USB with exclusive ownership/refusal, ADB preservation, private snapshot, manual restore, EOF cleanup and reopen recovery.
+- Classic Bluetooth HID registration, Android discoverability, paired-host selection, bounded sends, stale-peer protection and neutral release/disconnect.
+- Rotation, mirrored X, centered active area, pressure mode/curve, finger-input and stylus button/eraser settings; persistent preferences and readable diagnostics.
+- Protocol/mapping tests, Flutter control tests, Android APK and optional site builds.
+- Pinned Codex Micro attribution/reuse record and Windows descriptor/event inspection tools.
+
+## Remaining hardware acceptance
+
+- [ ] Local Windows console: native pen events and a named art application over USB and Bluetooth.
+- [ ] Mac: pairing/enumeration, native tablet events and a named drawing application over both transports.
+- [ ] Real stylus hardware: pressure/hover/barrel/eraser only where the source device supports them. The tested built-in TB-8505F touchscreen has no active stylus source.
+- [ ] Measure median/p95 latency and dropped reports using a stated method on both hosts.
+- [ ] Physical cable-pull/reconnect and long sessions on the owner's host/hub configuration.
+- [ ] Signed release APK after private release-signing configuration and host acceptance.
+
+Device results and exact limitations are in HARDWARE_ACCEPTANCE.md. Do not restart the failed Lenovo configfs HID or USB audio investigation. Read CODEX_MICRO_REUSE.md before future Codex Monitor transport work.

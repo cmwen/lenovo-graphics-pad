@@ -35,3 +35,7 @@ Do not blindly copy the Micro VID/PID, authentication, app keys, report6 identit
 One USB gadget controller and one Classic HID registration cannot be assumed available to both apps concurrently. Refuse an existing owner and provide a user-driven handoff. Never unlink another app's active gadget function.
 
 Future Codex Monitor work should link this record and the pinned source hardware log. This repo starts with no root side effects; implementation must preserve temporary properties, ADB access, explicit start/stop and recovery. No boot daemon, SELinux changes, kernel flashing or persistent USB properties are part of the current design.
+
+## Implemented port — 2026-10-23
+
+Graphics Pad now ports the pinned MIT FunctionFS/root/pipe implementation with attribution in THIRD_PARTY_NOTICES.md. Native report ID and size are parameterized; the runtime pen descriptor includes actual Android-reported active-area geometry and is passed to the helper explicitly. Micro vendor framing, audio, VID/PID and unused configfs HID mutations were removed. The app refuses any linked function except ADB and its own FunctionFS instance, and refuses Codex Micro's active recovery marker. Baseline must be ADB-only. Normal stop and force-stop recovery were checked on the physical tablet. Classic Bluetooth uses the public HID Device profile separately from Micro's BLE HOGP. Production code is present; host art-application acceptance remains tracked separately.

@@ -6,7 +6,7 @@ import BaseLayout from '../layouts/BaseLayout.astro'
   <section>
     <h2>Install & build guide</h2>
 
-    <p class="lead">Run the Lenovo Graphics Pad local preview and build Android artifacts. Hardware transports are not implemented.</p>
+    <p class="lead">Run Lenovo Graphics Pad on Android, draw locally, and connect through USB HID FunctionFS or Classic Bluetooth HID. Host pen behavior and continuous pressure remain unverified.</p>
 
     <div class="card">
       <h3>Prerequisites</h3>
@@ -33,6 +33,17 @@ cd lenovo-graphics-pad</pre>
       </ol>
       <pre style="background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;overflow:auto">flutter devices         # Find your Android device ID
 flutter run -d DEVICE_ID # Replace with the Android device ID</pre>
+    </div>
+
+    <div class="card">
+      <h3>Connect a host</h3>
+      <ul>
+        <li>Select USB or Bluetooth in the app, then start the transport.</li>
+        <li>USB gadget mode requires root support on the tablet. Use Restore Android USB / ADB after a USB session when needed.</li>
+        <li>Bluetooth uses Android's Classic Bluetooth HID Device profile and system pairing flow; it does not use BLE HID.</li>
+        <li>The tested TB-8505F exposes touchscreen input only, without an active stylus source or verified continuous pressure.</li>
+      </ul>
+      <p>Validate actual pen events, pressure, and the intended drawing app on Windows or macOS. Compatibility is not established by a successful connection alone.</p>
     </div>
 
     <div class="card">

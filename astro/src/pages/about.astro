@@ -4,7 +4,12 @@ import BaseLayout from '../layouts/BaseLayout.astro'
 <BaseLayout title="About">
   <section>
     <h2>About this site</h2>
-    <p>This site describes Lenovo Graphics Pad, an Android drawing and pointer diagnostics foundation. The current preview processes pointer events locally and does not connect to a host over USB or Bluetooth.</p>
+    <p>Lenovo Graphics Pad captures Android input on a native surface and can send digitizer reports through USB HID FunctionFS or Classic Bluetooth HID. USB uses the Android USB gadget path; Bluetooth uses the system HID Device profile. Bluetooth Low Energy HID is not the transport implemented here.</p>
+
+    <div class="card">
+      <h3>Hardware and compatibility status</h3>
+      <p>The tested Lenovo TB-8505F exposes touchscreen input but no active stylus source. Touch contact can provide basic binary input; continuous stylus pressure has not been verified. Windows, macOS, and specific drawing applications still require host testing, so this project is not presented as a Wacom replacement.</p>
+    </div>
 
     <div class="card">
       <h3>How it works</h3>

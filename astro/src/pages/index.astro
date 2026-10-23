@@ -4,14 +4,14 @@ import BaseLayout from '../layouts/BaseLayout.astro'
 <BaseLayout title="Lenovo Graphics Pad">
   <section>
     <h2>Welcome 👋</h2>
-    <p class="lead"><strong>Lenovo Graphics Pad</strong> is an Android drawing and input diagnostics starter. Its drawing preview is local; USB and Bluetooth host transports are not implemented.</p>
+    <p class="lead"><strong>Lenovo Graphics Pad</strong> turns an Android tablet into a candidate external pen pad. It captures native input and can send digitizer reports over USB HID FunctionFS or Classic Bluetooth HID.</p>
 
     <div class="card">
       <h3>What's here</h3>
       <ul>
-        <li>Local pointer drawing preview</li>
-        <li>Normalized coordinates and Flutter-reported pressure diagnostics</li>
-        <li>Digitizer report payload encoder foundation</li>
+        <li>Native drawing surface with local ink and input diagnostics</li>
+        <li>USB HID FunctionFS transport with Android USB/ADB restore control</li>
+        <li>Classic Bluetooth HID pairing and host connection (not BLE)</li>
       </ul>
     </div>
 
@@ -19,9 +19,9 @@ import BaseLayout from '../layouts/BaseLayout.astro'
       <h3>Features</h3>
       <ul>
         <li>Flutter 3.38.7 with Material Design 3</li>
-        <li>USB and Bluetooth are selector options only; no device connection exists yet</li>
-        <li>Pointer pressure is shown as reported by Flutter and may be synthetic or unavailable</li>
-        <li>Android builds and signing setup are retained</li>
+        <li>Tested Lenovo TB-8505F reports touchscreen input only; it has no active stylus source or verified continuous pen pressure</li>
+        <li>Windows, macOS, and drawing-app compatibility still need host validation</li>
+        <li>This project is not a verified Wacom replacement</li>
       </ul>
     </div>
 
@@ -44,8 +44,8 @@ flutter run</pre>
     <div class="card">
       <h3>Next steps</h3>
       <ol>
-        <li>Review <code>lib/pen_report.dart</code> for the local report encoding format</li>
-        <li>Connect and validate a host transport before sending reports to hardware</li>
+        <li>Choose USB or Classic Bluetooth in the app and start the transport</li>
+        <li>Test host pen events, pressure, and drawing-app behavior on each target system</li>
         <li>Configure <code>astro/astro.config.mjs</code> for your GitHub Pages URL</li>
       </ol>
     </div>

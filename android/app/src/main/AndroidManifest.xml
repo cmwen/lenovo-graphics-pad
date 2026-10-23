@@ -1,34 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- ============================================================
-         PERMISSIONS - Modify based on your app's requirements
-         ============================================================ -->
-
-    <!-- REQUIRED PERMISSIONS -->
-    <!-- Internet access - Required for network requests (API calls, web content) -->
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- Network state - Check connectivity status before making requests -->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-
-    <!-- OPTIONAL PERMISSIONS - Uncomment as needed -->
-
-    <!-- Camera - For photo/video capture functionality -->
-    <!-- <uses-permission android:name="android.permission.CAMERA"/> -->
-
-    <!-- Location - For maps, geofencing, location-based features -->
-    <!-- <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/> -->
-    <!-- <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/> -->
-
-    <!-- Storage - For file access (Note: Android 10+ uses scoped storage) -->
-    <!-- On Android 10+ (API 29+), prefer MediaStore or Storage Access Framework -->
-    <!-- <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/> -->
-    <!-- <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/> -->
-
-    <!-- Audio - For voice recording, audio capture -->
-    <!-- <uses-permission android:name="android.permission.RECORD_AUDIO"/> -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE"/>
+    <uses-feature android:name="android.hardware.bluetooth" android:required="false"/>
 
     <application
         android:label="@string/app_name"
+        android:allowBackup="false"
+        android:extractNativeLibs="true"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:networkSecurityConfig="@xml/network_security_config">

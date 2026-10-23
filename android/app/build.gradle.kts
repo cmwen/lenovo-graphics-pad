@@ -60,11 +60,14 @@ android {
         applicationId = "com.cmwen.lenovo_graphics_pad"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 28
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        externalNativeBuild { cmake { arguments += "-DANDROID_STL=c++_static" } }
     }
+
+    externalNativeBuild { cmake { path = file("src/main/cpp/CMakeLists.txt"); version = "3.22.1" } }
 
     // Build optimization settings
     buildFeatures {

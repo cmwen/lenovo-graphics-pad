@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.22.1)
+project(pad_usb_hid LANGUAGES C)
+add_library(pad_usb_hid SHARED usb_functionfs_hid.c)
+target_compile_features(pad_usb_hid PRIVATE c_std_11)
+target_compile_options(pad_usb_hid PRIVATE -Wall -Wextra -Werror)

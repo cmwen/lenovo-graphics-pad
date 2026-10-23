@@ -65,6 +65,9 @@ jobs:
     - name: Run tests with coverage
       run: flutter test --coverage --concurrency=$(nproc)
     
+    - name: Check native pen descriptor and reports
+      run: bash scripts/check-pen-protocol.sh
+
     - name: Build debug APK
       run: flutter build apk --debug
     
