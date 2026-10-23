@@ -1,17 +1,17 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
 ---
-<BaseLayout title="min-flutter-template">
+<BaseLayout title="Lenovo Graphics Pad">
   <section>
     <h2>Welcome 👋</h2>
-    <p class="lead">A minimal <strong>Flutter</strong> app template for cross-platform development. Build for Android, iOS, Web, and Desktop from a single codebase.</p>
+    <p class="lead"><strong>Lenovo Graphics Pad</strong> is an Android drawing and input diagnostics starter. Its drawing preview is local; USB and Bluetooth host transports are not implemented.</p>
 
     <div class="card">
       <h3>What's here</h3>
       <ul>
-        <li>Short project overview and docs link</li>
-        <li>Quick links to repository and CI</li>
-        <li>Light Startlight-inspired theme</li>
+        <li>Local pointer drawing preview</li>
+        <li>Normalized coordinates and Flutter-reported pressure diagnostics</li>
+        <li>Digitizer report payload encoder foundation</li>
       </ul>
     </div>
 
@@ -19,24 +19,23 @@ import BaseLayout from '../layouts/BaseLayout.astro'
       <h3>Features</h3>
       <ul>
         <li>Flutter 3.38.7 with Material Design 3</li>
-        <li>Cross-platform: Android, iOS, Web, macOS, Linux, Windows</li>
-        <li>Simple dependency management with pubspec.yaml</li>
-        <li>CI/CD workflows with signed release support</li>
-        <li>AI-friendly customization points</li>
+        <li>USB and Bluetooth are selector options only; no device connection exists yet</li>
+        <li>Pointer pressure is shown as reported by Flutter and may be synthetic or unavailable</li>
+        <li>Android builds and signing setup are retained</li>
       </ul>
     </div>
 
     <div class="card">
       <h3>Download / Release</h3>
-      <p class="lead">Get a packaged release from GitHub Releases (APK, App Bundle, Web).</p>
-      <p><a href="https://github.com/cmwen/min-android-app-template/releases/latest" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">Download latest release →</a></p>
+      <p class="lead">Get Android release artifacts from GitHub Releases.</p>
+      <p><a href="https://github.com/cmwen/lenovo-graphics-pad/releases" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">Check releases →</a></p>
     </div>
 
     <div class="card">
       <h3>Quick start</h3>
       <p class="lead">Get started in minutes with Flutter.</p>
-      <pre style="background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;margin-top:8px;overflow:auto">git clone https://github.com/cmwen/min-android-app-template.git
-cd min-android-app-template
+      <pre style="background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;margin-top:8px;overflow:auto">git clone https://github.com/cmwen/lenovo-graphics-pad.git
+cd lenovo-graphics-pad
 flutter pub get
 flutter run</pre>
       <p style="margin-top:8px"><a href={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/install/`} style="color:var(--accent);text-decoration:none">Open full install guide →</a></p>
@@ -45,8 +44,8 @@ flutter run</pre>
     <div class="card">
       <h3>Next steps</h3>
       <ol>
-        <li>Customize <code>lib/main.dart</code> with your app</li>
-        <li>Update <code>pubspec.yaml</code> with your app name</li>
+        <li>Review <code>lib/pen_report.dart</code> for the local report encoding format</li>
+        <li>Connect and validate a host transport before sending reports to hardware</li>
         <li>Configure <code>astro/astro.config.mjs</code> for your GitHub Pages URL</li>
       </ol>
     </div>

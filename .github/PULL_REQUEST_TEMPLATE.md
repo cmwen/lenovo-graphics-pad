@@ -13,7 +13,7 @@ Brief description of the changes in this PR.
 
 ## Checklist
 
-- [ ] Build succeeds (`flutter build apk`)
+- [ ] Build succeeds (`flutter build apk --debug`)
 - [ ] Tests pass (`flutter test`)
 - [ ] Code analysis passes (`flutter analyze`)
 - [ ] Documentation updated (if needed)

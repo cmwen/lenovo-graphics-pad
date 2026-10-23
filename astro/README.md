@@ -54,5 +54,5 @@ flutter build appbundle      # Signed Play Store bundle
 ## Releases
 
 Download prebuilt artifacts from GitHub Releases:
-https://github.com/cmwen/min-android-app-template/releases/latest
+https://github.com/cmwen/lenovo-graphics-pad/releases
 

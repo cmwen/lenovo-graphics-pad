@@ -1,6 +1,5 @@
-// TODO: Change package name to match your applicationId in build.gradle.kts
 // Example: package com.yourcompany.yourapp
-package com.cmwen.min_flutter_template
+package com.cmwen.lenovo_graphics_pad
 
 import io.flutter.embedding.android.FlutterActivity
 

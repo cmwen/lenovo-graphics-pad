@@ -477,3 +477,7 @@ flutter run --profile
 flutter build apk --analyze-size
 # Use Flutter DevTools for profiling
 ```
+
+## Lenovo Graphics Pad project rules
+
+This is a graphics-pad foundation derived from the template. Read README.md and docs/CODEX_MICRO_REUSE.md before transport work. Treat existing Codex Micro hardware findings as reusable evidence; do not repeat the failed Lenovo configfs HID experiment. Consult docs/ARCHITECTURE.md and docs/HARDWARE_ACCEPTANCE.md. Keep transport availability honest: local preview is not host pen input. Never claim real pressure or macOS/Windows art-app compatibility without hardware results. Root USB code must preserve ADB, exclusive ownership and recovery. Validate with dart format, flutter analyze, flutter test and flutter build apk --debug. Use Luna for bounded obvious tasks when requested; keep repository mutations in workspace Runs.

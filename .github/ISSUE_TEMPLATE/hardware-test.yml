@@ -1,0 +1,23 @@
+name: Hardware compatibility result
+description: Record tablet, transport, host and drawing application evidence
+title: "[Hardware] tablet / host / transport"
+body:
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: App commit/APK, Lenovo model/ROM/kernel, pen model, host OS build, art app/version, USB cable/hub or Classic/BLE.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Pen evidence
+      description: Descriptor dump, host pen events, mapping, tip/release, pressure samples, buttons, measured latency. Redact serials and secrets.
+    validations:
+      required: true
+  - type: textarea
+    id: recovery
+    attributes:
+      label: Lifecycle and recovery
+      description: Disconnect, focus loss, reconnect and ADB restoration. See docs/HARDWARE_ACCEPTANCE.md.

@@ -1,76 +1,33 @@
-# Minimal Android App Template
+# Lenovo Graphics Pad
 
-A Flutter Android starter with a Material 3 counter app, shared-preference storage service, a widget smoke test, and GitHub Actions build and release workflows. Optional agent configurations and an Astro documentation website are included. App architecture, navigation, authentication, and integration tests are choices to add for your app.
+Turn a rooted Lenovo Android tablet into an external graphics pad for Windows 11 and macOS over Bluetooth HID or USB HID.
 
-## Quick start
+**Status: foundation and feasibility prototype.** The app currently captures local input and previews pen reports. Bluetooth pairing, USB gadget activation, host pen events and pressure support are not implemented or verified in this repository. Selecting a transport does not connect a host. This is not yet a replacement for a Wacom tablet.
 
-Use **Flutter 3.38.7**, which includes **Dart 3.10.7**, and **Java 17**. The SDK version is pinned in `.flutter-version` and aligned with CI and the devcontainer. Python 3 is required for the setup and rename regression scripts. Install Android SDK Platform 36 and accept the SDK licenses. See [PREREQUISITES.md](PREREQUISITES.md) for setup details.
+Created from [min-android-app-template](https://github.com/cmwen/min-android-app-template): Flutter Android project, automated debug builds, signing/release workflows, agent instructions, issue/PR templates and optional website starter.
 
-```bash
-git clone https://github.com/cmwen/min-android-app-template.git my-app
-cd my-app
-flutter --version
-flutter doctor -v
-./scripts/setup/quick-start.sh
-```
+## Run
 
-The interactive setup renames the Dart package, app title, Android application ID and namespace, and Kotlin activity declaration and directory. It then runs dependency resolution, analysis, and tests. Review the changes before starting your own app. You can also follow [PACKAGE_RENAME_GUIDE.md](PACKAGE_RENAME_GUIDE.md) manually. The template runs under its default identity; choose a unique identity before distributing an app or installing it alongside another app derived from this template.
+Use Flutter 3.38.7 and Java 17 with an Android SDK:
 
-```bash
+```sh
 flutter pub get
-dart format --output=none --set-exit-if-changed .
 flutter analyze
 flutter test
 flutter build apk --debug
-# Run on your chosen emulator or device when ready:
 flutter run
 ```
 
-For a cloud setup, create a repository from this template and open it in GitHub Codespaces. The devcontainer installs the same pinned Flutter version.
+Application ID: `com.cmwen.lenovo_graphics_pad`. Release signing remains private; see [SIGNING.md](SIGNING.md). Do not copy Codex Micro signing keys, identifiers or vendor identities.
 
-## Builds and signing
+## Hardware and compatibility
 
-Developer debug builds use the Android debug key. Local release builds require a private signing key and complete `android/key.properties`. CI releases require all four repository secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD`. Real releases fail if any credential is absent. See [SIGNING.md](SIGNING.md) for private key generation, local signing, and GitHub secret configuration. Keep keys and passwords out of source, logs, and build artifacts.
+The prior Codex Micro investigation used a rooted Lenovo Tab M8 TB-8505F running Android 10. The precise Lenovo model and pen hardware must be recorded before claiming pressure sensitivity. Touch pressure values do not establish an active stylus digitizer. Finger input remains useful for basic position and contact testing.
 
-```bash
-# After configuring private release signing:
-flutter build apk --release
-flutter build appbundle --release
-```
+The product target is standard pen/digitizer HID that the host treats as a graphics pad. A connected HID device or moving mouse pointer alone does not meet this target. macOS and individual art applications require independent pen-event and pressure tests.
 
-CI checks formatting without editing or committing source files, runs analysis and tests, and builds debug artifacts. Tag-triggered `release.yml` and manually triggered `pre-release.yml` build signed artifacts with configured GitHub secrets. See [BUILD_OPTIMIZATION.md](BUILD_OPTIMIZATION.md) for the local and CI Gradle settings.
+## Build from existing evidence
 
-## Optional website
+Start with [the Codex Micro reuse record](docs/CODEX_MICRO_REUSE.md), then [the transport architecture](docs/ARCHITECTURE.md) and [hardware acceptance checklist](docs/HARDWARE_ACCEPTANCE.md). These preserve the existing Lenovo USB findings instead of rediscovering them.
 
-`astro/` contains an optional GitHub Pages documentation website. It is independent of the Android app and can be retained, customized, or removed. Use **Node 24 LTS** (Astro 7 requires at least 22.22.0; this site requires Node >=24.0.0):
-
-```bash
-cd astro
-npm ci
-npm run build
-```
-
-`deploy-website.yml` handles website deployment, including successful completion of release workflows. Enable GitHub Pages with GitHub Actions as the source before using it.
-
-## Development resources
-
-The repository includes seven optional agent roles: orchestrator, product owner, experience designer, architect, researcher, Flutter developer, and documentation writer. Their configurations live in `.github/agents/` and `.opencode/agents/`; shared task skills live in `.github/skills/`.
-
-- [GETTING_STARTED.md](GETTING_STARTED.md): detailed setup
-- [APP_CUSTOMIZATION.md](APP_CUSTOMIZATION.md): customization checklist
-- [AGENTS.md](AGENTS.md): agent conventions
-- [AI_PROMPTING_GUIDE.md](AI_PROMPTING_GUIDE.md): agent prompts
-- [TESTING.md](TESTING.md): unit and widget tests, plus instructions for adding integration tests
-- [CONTRIBUTING.md](CONTRIBUTING.md): contributions
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md): common issues
-
-```text
-lib/           Flutter starter and storage service
-test/          Widget smoke test
-android/       Android configuration
-astro/         Optional documentation website
-docs/          Development guides
-scripts/       Setup, validation, and signing helpers
-```
-
-MIT License. See [LICENSE](LICENSE).
+Implementation order and concrete exit criteria are in [ROADMAP.md](docs/ROADMAP.md). Luna subagents handled initial source research and the bounded app scaffold; changes were reviewed in an isolated workspace run.
