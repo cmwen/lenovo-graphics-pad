@@ -1,0 +1,16 @@
+/.gradle
+/captures/
+# Include Gradle wrapper files in the repository so CI runners can use
+# the wrapper to download and run the correct Gradle distribution.
+!gradle-wrapper.jar
+!gradlew
+!gradlew.bat
+/local.properties
+GeneratedPluginRegistrant.java
+.cxx/
+
+# Remember to never publicly share your keystore.
+# See https://flutter.dev/to/reference-keystore
+key.properties
+**/*.keystore
+**/*.jks

@@ -1,0 +1,87 @@
+name: Flutter Build
+
+on:
+  push:
+    branches: [ main, develop, flutter-migration ]
+  pull_request:
+    branches: [ main, develop ]
+
+# Cancel in-progress runs for the same workflow and ref
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+    
+    - name: Setup Java
+      uses: actions/setup-java@v5
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        cache: 'gradle'
+    
+    # Use CI-optimized Gradle properties
+    - name: Setup Gradle for CI
+      run: cp android/gradle-ci.properties android/gradle.properties
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.38.7'
+        channel: 'stable'
+        cache: true
+    
+    # Cache pub dependencies for faster builds
+    - name: Cache Flutter packages
+      uses: actions/cache@v5
+      with:
+        path: |
+          ~/.pub-cache
+          ${{ github.workspace }}/.dart_tool
+        key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pub-
+
+    - name: Get dependencies
+      run: flutter pub get
+    
+    - name: Verify formatting
+      run: dart format --output=none --set-exit-if-changed .
+
+    - name: Analyze code
+      run: flutter analyze
+    
+    - name: Run tests with coverage
+      run: flutter test --coverage --concurrency=$(nproc)
+    
+    - name: Check renamed starter in a disposable copy
+      run: python3 scripts/checks/rename-regression.py
+
+    - name: Build debug APK
+      run: flutter build apk --debug
+    
+    - name: Upload APK
+      uses: actions/upload-artifact@v7
+      with:
+        name: android-apk
+        path: build/app/outputs/flutter-apk/app-debug.apk
+        retention-days: 7
+    
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v7
+      if: always()
+      with:
+        files: coverage/lcov.info
+        fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}

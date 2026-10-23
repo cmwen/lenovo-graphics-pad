@@ -1,0 +1,187 @@
+name: Flutter Pre-Release & Beta
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        type: choice
+        options:
+          - pre-release
+          - beta
+          - alpha
+        default: 'beta'
+      version_name:
+        description: 'Version name (e.g., 1.0.0-beta.1)'
+        required: true
+        type: string
+      create_release:
+        description: 'Create GitHub Release'
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  pre-release:
+    name: Build & Release ${{ inputs.release_type }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Determine version
+      id: version
+      env:
+        INPUT_VERSION: ${{ inputs.version_name }}
+        RUN_NUMBER: ${{ github.run_number }}
+        RELEASE_TYPE: ${{ inputs.release_type }}
+      run: |
+        set -euo pipefail
+        if [[ ! "$RELEASE_TYPE" =~ ^(pre-release|beta|alpha)$ ]]; then
+          echo '::error::Release type must be pre-release, beta, or alpha.'
+          exit 1
+        fi
+        VERSION="${INPUT_VERSION#v}"
+        if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z]+([.-][0-9A-Za-z]+)*)?(\+[0-9]+)?$ ]]; then
+          echo '::error::Version must be major.minor.patch with optional prerelease and numeric +build suffix.'
+          exit 1
+        fi
+        BUILD_NUMBER="$RUN_NUMBER"
+        if [[ "$VERSION" == *+* ]]; then
+          BUILD_NUMBER="${VERSION##*+}"
+          VERSION="${VERSION%+*}"
+        fi
+        if [[ ! "$BUILD_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+          echo '::error::Build number must be a positive integer.'
+          exit 1
+        fi
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+        echo "tag_name=$INPUT_VERSION" >> "$GITHUB_OUTPUT"
+
+    # Releases require all four private signing secrets; no credentials are generated.
+    - name: Setup Android Signing
+      id: signing
+      uses: ./.github/actions/setup-signing
+      with:
+        keystore_base64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        keystore_password: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        key_alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+        key_password: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+    - name: Setup Java
+      uses: actions/setup-java@v5
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        cache: 'gradle'
+
+    # Use CI-optimized Gradle properties
+    - name: Setup Gradle for CI
+      run: cp android/gradle-ci.properties android/gradle.properties
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.38.7'
+        channel: 'stable'
+        cache: true
+
+    # Cache pub dependencies for faster builds
+    - name: Cache Flutter packages
+      uses: actions/cache@v5
+      with:
+        path: |
+          ~/.pub-cache
+          ${{ github.workspace }}/.dart_tool
+        key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pub-
+
+    - name: Get dependencies
+      run: flutter pub get
+
+    - name: Run tests
+      run: flutter test --concurrency=$(nproc)
+
+    - name: Build signed APK
+      env:
+        BUILD_VERSION: ${{ steps.version.outputs.version }}
+        BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+      run: flutter build apk --release --build-name="$BUILD_VERSION" --build-number="$BUILD_NUMBER"
+
+    - name: Build signed App Bundle
+      env:
+        BUILD_VERSION: ${{ steps.version.outputs.version }}
+        BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+      run: flutter build appbundle --release --build-name="$BUILD_VERSION" --build-number="$BUILD_NUMBER"
+
+    # Rename artifacts with version suffix
+    - name: Rename artifacts
+      env:
+        VERSION: ${{ steps.version.outputs.tag_name }}
+        RELEASE_TYPE: ${{ inputs.release_type }}
+      run: |
+        set -euo pipefail
+        APP_NAME=min-android-template
+        mkdir -p build/artifacts
+        cp build/app/outputs/flutter-apk/app-release.apk \
+           "build/artifacts/${APP_NAME}-${VERSION}-${RELEASE_TYPE}.apk"
+        cp build/app/outputs/bundle/release/app-release.aab \
+           "build/artifacts/${APP_NAME}-${VERSION}-${RELEASE_TYPE}.aab"
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.release_type }}-${{ inputs.version_name }}
+        path: build/artifacts/*
+        retention-days: 90
+
+    - name: Create GitHub Release
+      if: ${{ inputs.create_release }}
+      uses: softprops/action-gh-release@v3
+      with:
+        name: ${{ inputs.version_name }}
+        tag_name: ${{ inputs.version_name }}
+        prerelease: true
+        draft: false
+        target_commitish: ${{ github.sha }}
+        files: build/artifacts/*
+        body: |
+          ## 🧪 ${{ inputs.release_type == 'pre-release' && 'Pre-Release' || inputs.release_type == 'beta' && 'Beta Release' || 'Alpha Release' }}
+
+          This is a ${{ inputs.release_type }} build for testing purposes.
+
+          **Version:** ${{ inputs.version_name }}
+          **Build Type:** ${{ inputs.release_type }}
+
+          ### ⚠️ Warning
+          This build may contain experimental features and bugs. Not recommended for production use.
+
+          ### 📦 Downloads
+          - **APK**: Universal Android package (all architectures)
+          - **AAB**: Android App Bundle (for Play Store internal testing)
+
+          ### 🧪 Testing Instructions
+          1. Download the APK file
+          2. Enable "Install from unknown sources" on your Android device
+          3. Install the APK
+          4. Report any issues on GitHub
+
+          ---
+          *Built from commit: ${{ github.sha }}*
+
+    - name: Clean up signing files
+      if: always()
+      env:
+        SIGNING_DIRECTORY: ${{ steps.signing.outputs.signing_directory }}
+      run: |
+        rm -f android/key.properties
+        if [[ -n "$SIGNING_DIRECTORY" ]]; then
+          rm -rf -- "$SIGNING_DIRECTORY"
+        fi

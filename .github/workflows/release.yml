@@ -1,0 +1,177 @@
+name: Flutter Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g., 1.2.0). If empty, uses pubspec.yaml version'
+        required: false
+        type: string
+      create_tag:
+        description: 'Create git tag for this version'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Determine version
+      id: version
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+        REF_TYPE: ${{ github.ref_type }}
+        REF_NAME: ${{ github.ref_name }}
+        INPUT_VERSION: ${{ inputs.version }}
+        RUN_NUMBER: ${{ github.run_number }}
+      run: |
+        set -euo pipefail
+        if [[ "$EVENT_NAME" == push && "$REF_TYPE" == tag ]]; then
+          VERSION="$REF_NAME"
+          SOURCE=tag
+        elif [[ -n "$INPUT_VERSION" ]]; then
+          VERSION="$INPUT_VERSION"
+          SOURCE=input
+        else
+          VERSION=$(sed -n 's/^version: *//p' pubspec.yaml)
+          SOURCE=pubspec
+        fi
+        VERSION="${VERSION#v}"
+        if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z]+([.-][0-9A-Za-z]+)*)?(\+[0-9]+)?$ ]]; then
+          echo '::error::Version must be major.minor.patch with optional prerelease and numeric +build suffix.'
+          exit 1
+        fi
+        BUILD_NUMBER="$RUN_NUMBER"
+        if [[ "$VERSION" == *+* ]]; then
+          BUILD_NUMBER="${VERSION##*+}"
+          VERSION="${VERSION%+*}"
+        fi
+        if [[ ! "$BUILD_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+          echo '::error::Build number must be a positive integer.'
+          exit 1
+        fi
+        echo "source=$SOURCE" >> "$GITHUB_OUTPUT"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+        echo "tag_name=v$VERSION" >> "$GITHUB_OUTPUT"
+
+    # Releases require all four private signing secrets; no credentials are generated.
+    - name: Setup Android Signing
+      id: signing
+      uses: ./.github/actions/setup-signing
+      with:
+        keystore_base64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        keystore_password: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        key_alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+        key_password: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+    - name: Setup Java
+      uses: actions/setup-java@v5
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        cache: 'gradle'
+
+    # Use CI-optimized Gradle properties
+    - name: Setup Gradle for CI
+      run: cp android/gradle-ci.properties android/gradle.properties
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.38.7'
+        channel: 'stable'
+        cache: true
+
+    # Cache pub dependencies for faster builds
+    - name: Cache Flutter packages
+      uses: actions/cache@v5
+      with:
+        path: |
+          ~/.pub-cache
+          ${{ github.workspace }}/.dart_tool
+        key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pub-
+
+    - name: Get dependencies
+      run: flutter pub get
+
+    - name: Run tests
+      run: flutter test --concurrency=$(nproc)
+
+    - name: Build signed APK
+      env:
+        BUILD_VERSION: ${{ steps.version.outputs.version }}
+        BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+      run: flutter build apk --release --build-name="$BUILD_VERSION" --build-number="$BUILD_NUMBER"
+
+    - name: Build signed App Bundle
+      env:
+        BUILD_VERSION: ${{ steps.version.outputs.version }}
+        BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+      run: flutter build appbundle --release --build-name="$BUILD_VERSION" --build-number="$BUILD_NUMBER"
+
+    # Rename artifacts with version suffix
+    - name: Rename artifacts
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
+        BUILD_NUMBER: ${{ steps.version.outputs.build_number }}
+      run: |
+        set -euo pipefail
+        APP_NAME=min-android-template
+        mkdir -p build/artifacts
+        cp build/app/outputs/flutter-apk/app-release.apk \
+           "build/artifacts/${APP_NAME}-${VERSION}+${BUILD_NUMBER}.apk"
+        cp build/app/outputs/bundle/release/app-release.aab \
+           "build/artifacts/${APP_NAME}-${VERSION}+${BUILD_NUMBER}.aab"
+
+    - name: Upload release artifacts
+      uses: actions/upload-artifact@v7
+      with:
+        name: release-${{ steps.version.outputs.version }}
+        path: build/artifacts/*
+        retention-days: 90
+
+    - name: Create and push tag
+      if: github.event_name == 'workflow_dispatch' && inputs.create_tag && steps.version.outputs.source != 'tag'
+      env:
+        RELEASE_TAG: ${{ steps.version.outputs.tag_name }}
+        RELEASE_VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git tag -a "$RELEASE_TAG" -m "Release $RELEASE_VERSION"
+        git push origin "$RELEASE_TAG"
+
+    - name: Publish GitHub Release
+      if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.create_tag)
+      uses: softprops/action-gh-release@v3
+      with:
+        name: ${{ steps.version.outputs.tag_name }}
+        tag_name: ${{ steps.version.outputs.tag_name }}
+        target_commitish: ${{ github.sha }}
+        files: build/artifacts/*
+        generate_release_notes: true
+
+    - name: Clean up signing files
+      if: always()
+      env:
+        SIGNING_DIRECTORY: ${{ steps.signing.outputs.signing_directory }}
+      run: |
+        rm -f android/key.properties
+        if [[ -n "$SIGNING_DIRECTORY" ]]; then
+          rm -rf -- "$SIGNING_DIRECTORY"
+        fi

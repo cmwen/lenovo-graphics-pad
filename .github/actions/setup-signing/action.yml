@@ -1,0 +1,85 @@
+name: Setup Android Signing
+description: Configure release signing from four required private secrets
+
+inputs:
+  keystore_base64:
+    description: Base64 encoded private keystore
+    required: true
+  keystore_password:
+    description: Keystore password
+    required: true
+  key_alias:
+    description: Signing key alias
+    required: true
+  key_password:
+    description: Signing key password
+    required: true
+
+outputs:
+  signing_directory:
+    description: Temporary directory to remove after the build
+    value: ${{ steps.setup.outputs.signing_directory }}
+
+runs:
+  using: composite
+  steps:
+    - name: Validate and prepare private signing files
+      id: setup
+      shell: bash
+      env:
+        INPUT_KEYSTORE_BASE64: ${{ inputs.keystore_base64 }}
+        INPUT_KEYSTORE_PASSWORD: ${{ inputs.keystore_password }}
+        INPUT_KEY_ALIAS: ${{ inputs.key_alias }}
+        INPUT_KEY_PASSWORD: ${{ inputs.key_password }}
+      run: |
+        set -euo pipefail
+        umask 077
+        python3 - <<'PY'
+        import base64
+        import os
+        from pathlib import Path
+        import shutil
+        import tempfile
+
+        required = {
+            'INPUT_KEYSTORE_BASE64': 'ANDROID_KEYSTORE_BASE64',
+            'INPUT_KEYSTORE_PASSWORD': 'ANDROID_KEYSTORE_PASSWORD',
+            'INPUT_KEY_ALIAS': 'ANDROID_KEY_ALIAS',
+            'INPUT_KEY_PASSWORD': 'ANDROID_KEY_PASSWORD',
+        }
+        missing = [secret for variable, secret in required.items() if not os.environ.get(variable, '').strip()]
+        if missing:
+            raise SystemExit('::error::Release signing requires all four repository secrets. Missing: ' + ', '.join(missing))
+        try:
+            data = base64.b64decode(''.join(os.environ['INPUT_KEYSTORE_BASE64'].split()), validate=True)
+            if not data:
+                raise ValueError()
+        except ValueError:
+            raise SystemExit('::error::ANDROID_KEYSTORE_BASE64 must contain a valid nonempty base64 keystore.')
+
+        # Escape every UTF-16 code unit for java.util.Properties, including spaces,
+        # backslashes and non-ASCII passwords. Never interpolate secrets into shell.
+        def property_value(value):
+            raw = value.encode('utf-16-be')
+            return ''.join('\\u' + raw[i:i + 2].hex() for i in range(0, len(raw), 2))
+
+        directory = Path(tempfile.mkdtemp(prefix='android-signing-', dir=os.environ['RUNNER_TEMP']))
+        properties = Path(os.environ['GITHUB_WORKSPACE']) / 'android/key.properties'
+        try:
+            keystore = directory / 'release.jks'
+            keystore.write_bytes(data)
+            values = {
+                'storeFile': str(keystore),
+                'storePassword': os.environ['INPUT_KEYSTORE_PASSWORD'],
+                'keyAlias': os.environ['INPUT_KEY_ALIAS'],
+                'keyPassword': os.environ['INPUT_KEY_PASSWORD'],
+            }
+            properties.write_text(''.join(key + '=' + property_value(value) + '\n' for key, value in values.items()), encoding='ascii')
+            with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+                output.write('signing_directory=' + str(directory) + '\n')
+        except Exception:
+            properties.unlink(missing_ok=True)
+            shutil.rmtree(directory)
+            raise SystemExit('::error::Unable to prepare private signing files.')
+        print('Release signing files prepared privately for this job.')
+        PY
