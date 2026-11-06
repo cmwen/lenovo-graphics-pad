@@ -65,8 +65,8 @@ Skills are stored in `.github/skills/` and symlinked to `.opencode/skills/` for 
 
 ## Key Technologies
 
-- **Framework**: Flutter 3.38.7
-- **Language**: Dart 3.10.7
+- **Framework**: Flutter 3.44.9
+- **Language**: Dart 3.12.2
 - **Build System**: Java 17, Gradle 8.0+ with parallel builds and caching
 - **Platform**: Android
 - **Package Manager**: pub (pubspec.yaml)
@@ -481,3 +481,7 @@ flutter build apk --analyze-size
 ## Lenovo Graphics Pad project rules
 
 This is a native-input graphics-pad app derived from the Flutter template. Read README.md and docs/CODEX_MICRO_REUSE.md before transport work. Treat existing Codex Micro hardware findings as reusable evidence; do not repeat the failed Lenovo configfs HID experiment. Consult docs/ARCHITECTURE.md and docs/HARDWARE_ACCEPTANCE.md. Keep transport availability honest: local preview is not host pen input. Never claim real pressure or macOS/Windows art-app compatibility without hardware results. Root USB code must preserve ADB, exclusive ownership and recovery. Validate with dart format, flutter analyze, flutter test, bash scripts/check-pen-protocol.sh and flutter build apk --debug. Use Luna for bounded obvious tasks when requested; keep repository mutations in workspace Runs.
+
+## Dependency build maintenance
+
+CI pins Flutter 3.44.9 (Dart 3.12). Keep the Flutter version aligned across build, release, prerelease, CodeQL, and Copilot setup workflows. Recent shared_preferences/image_picker require Dart 3.11; sqflite requires Dart 3.12. Diagnose the first failing step before changing package versions. Validate Dependabot updates with pub get, formatting, analyze, tests, and a debug APK build; do not merge on missing checks. Regenerate generated sources when required by this repository.
